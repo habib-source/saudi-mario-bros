@@ -1,6 +1,8 @@
 # Saudi Mario Bros
 
-NES ROM hack of Super Mario Bros with a Saudi Arabian theme. Built from doppelganger's 6502 disassembly.
+NES ROM hack of Super Mario Bros with a Saudi/Najdi theme. Built from doppelganger's 6502 disassembly.
+
+Inspired by the 8-bit Saudi Mario graffiti at Roshn Front / Riyadh Front (by @asadalghareeb) — features Mario in thobe + red/white shemagh, Najdi castle with Saudi flag, palm trees, sand bricks, a camel, smiley cloud, and "TIME 2030" (Vision 2030 nod).
 
 **No theme changes without explicit user approval.**
 
@@ -37,6 +39,156 @@ saudi-mario-bros/
 │   └── fceux64.exe
 └── output/
     └── saudi-mario-bros.nes  # Built ROM (gitignored)
+```
+
+---
+
+## Theme Vision
+
+### Reference
+Roshn Front graffiti (Riyadh, by @asadalghareeb): 8-bit Saudi Mario in thobe + red/white shemagh jumping past a Najdi castle with Saudi flag, palm tree, sand-colored bricks, camel in foreground, smiley cloud, HUD reads "TIME 2030".
+
+### Character Rethemes
+
+| Original | Saudi Version | Notes |
+|----------|--------------|-------|
+| Mario | **Saudi Mario** | Thobe + shemagh (red/white keffiyeh) + iqal + sandals. Classic jump pose. Same for Luigi (player 2) |
+| Goomba | **Date Goomba** (تمر) | Angry date cluster with feet, same grumpy walk cycle |
+| Green/Red Koopa | **Camel Troopa** (جمل) | Camel with saddle bags + hump. Shell variant: retreats under the saddle |
+| Buzzy Beetle | **Scorpion** (عقرب) | Desert scorpion, same shell/flip mechanic |
+| Cheep-Cheep (flying fish) | **Falcon** (صقر) | Hunting falcon — falconry is iconic in KSA |
+| Blooper (squid) | **Sand Snake** (ثعبان) | Desert snake, replaces underwater squid |
+| Piranha Plant | **Cactus** (صبّار) | Spiky cactus poking out of the pipe |
+| Lakitu | **Carpet Rider** | On a flying carpet instead of cloud, throws scorpions/spiny |
+| Bowser | **Sheikh Boss** (الشيخ) | Big boss in bisht + ghutrah, gold-trimmed. Crown energy |
+| Toad / Retainer | **Najdi Villager** | In traditional Najdi dress |
+| Hammer Bro | **Sword Dancer** (عرضة) | Saudi sword dance warrior, throws curved swords |
+
+### Power-up Rethemes
+
+| Original | Saudi Version | Notes |
+|----------|--------------|-------|
+| Mushroom | **Qahwa cup** (قهوة) | Cardamom coffee — grow big after caffeine hit |
+| Fire Flower | **Oud bottle** (عود) | Shoots smoke/incense clouds instead of fireballs |
+| Super Star | **Camel milk carton** (حليب إبل) | Invincibility item |
+| Coin | **Dinar coin** (ريال) | Gold coin with Arabic Riyal symbol |
+| 1-Up Mushroom | **Dates basket** | Extra life |
+
+### Environment Rethemes
+
+| Original | Saudi Version | Notes |
+|----------|--------------|-------|
+| Green warp pipes | **Oil derrick pipes** | Black/dark steel, oil dripping |
+| Bricks | **Sand/mud bricks** | Najdi architectural style, warm tan/brown |
+| ? Block | **؟ Block** | Arabic question mark |
+| Green hills | **Sand dunes** | Rolling desert dunes |
+| Bushes | **Palm trees** (نخلة) | With dates hanging from them |
+| Clouds | **Smiley clouds** | Keep the friendly face from the graffiti |
+| Mountains | **Rock formations** | AlUla/Madain Saleh style |
+| Castle (end of level) | **Najdi fortress** | Masmak-style pointed battlements (شُرُفات), arched windows, Saudi flag on top |
+| Flagpole flag | **Saudi flag** | Green with shahada + sword |
+| Underground | **Oasis cave** | Underground water → oasis pool theme |
+
+### World Themes (ideas, not final)
+
+| World | Theme | Vibe |
+|-------|-------|------|
+| World 1 | **Najdi Desert** | Sand dunes, palm trees, mud-brick villages — the graffiti style |
+| World 2 | **Nabataean Ruins** | AlUla / Madain Saleh carved rock facades |
+| World 3 | **Red Sea / Jeddah Corniche** | Underwater coral, Jeddah waterfront |
+| World 4 | **Modern Riyadh** | NEOM-futuristic, Kingdom Tower silhouettes |
+| World 5–8 | TBD | Mix and escalate difficulty |
+
+### Palette Direction
+
+Desert warmth: swap the blue sky ($22) for amber/sunset tones in later worlds. Sand ($38 cream, $28 yellow, $07 brown) replaces green ($1a, $29). Keep sky blue for World 1 (matches the graffiti), go orange/sunset for World 4+.
+
+### Music Direction (ideas)
+
+Arabic/Middle-Eastern scales using the existing NES APU channels. Oud-like melodies on Square channels, darbuka rhythms on Noise channel. The frequency table (line 16301) can be modified for quarter-tone approximations.
+
+### Sprite Sheet Concepts (8-bit, NES constraints)
+
+All sprites must fit NES limits: 8x8 or 8x16 pixel tiles, max 4 colors per sprite palette (including transparent). Each character below maps to existing tile slots in CHR-ROM.
+
+**Saudi Mario (small — 16x16, 4 tiles)**
+```
+    ░█░░
+    █RW█      R = red shemagh pattern
+    ░█W█      W = white thobe
+    █░░█      Black iqal band on head
+    ░██░      Sandals (dark)
+```
+
+**Saudi Mario (big — 16x32, 8 tiles)**
+```
+    ░██░░
+    █RWR█     Red/white keffiyeh pattern
+    ░████     Iqal (black band)
+    ░█SS█     S = skin (face)
+    █WWWW█    White thobe body
+    █WWWW█    
+    █W██W█    Thobe skirt
+    ░█░░█░    Sandals
+```
+
+**Date Goomba (16x16, 4 tiles)**
+```
+    ░████░
+    █BBBB█    B = brown date color
+    █>BB<█    Angry eyes (> <)
+    ░████░
+    ░█░░█░    Little feet
+```
+
+**Camel Troopa (16x24, 6 tiles)**
+```
+    █░░░░░
+    ██░░░░    Head + neck
+    ░████░    Hump + saddle bags
+    █BBBB█    B = brown body
+    █░██░█    
+    █░░░░█    Four legs
+```
+
+**Qahwa Cup (16x16, power-up)**
+```
+    ░░██░░
+    ░░~~░░    Steam wisps
+    ░█CC█░    C = coffee brown
+    ░█CC█░    Dallah shape
+    ░░██░░
+    ░████░    Base
+```
+
+**Dinar Coin (8x8, single tile)**
+```
+    ░████░
+    █YYYY█    Y = yellow/gold
+    █ ﷼  █    Riyal symbol (simplified)
+    █YYYY█
+    ░████░
+```
+
+**Najdi Castle (end-level, background tiles)**
+```
+    █░█░█░█    Pointed battlements (شرفات)
+    ████████   
+    █░████░█   Arched windows
+    ████████   
+    ██▓▓▓▓██   Door (wooden, dark)
+    ████████   Mud-brick tan color
+    [Saudi flag on top flagpole]
+```
+
+**Oil Pipe (replaces warp pipe, background tiles)**
+```
+    ████████    Dark steel/black
+    █░░░░░█    
+    █░░░░░█    Pipe interior
+    █░░░░░█    
+    ████████    
+    ░░█~~█░    Oil drip (~)
 ```
 
 ---
@@ -137,13 +289,57 @@ All code starts at `.org $8000` (CPU address $8000–$FFFF).
 
 ---
 
-## Theming Targets
+## Implementation Mapping — Theme to Code
 
-All changes require user approval.
+How each theme idea maps to actual edits:
 
-### 1. Palettes — colors (lines 2238–2304)
+### PRG-ROM changes (SMBDIS.ASM)
 
-Format: 3-byte PPU address header + groups of 4 NES color indices. The NES has a fixed 64-color hardware palette.
+| Theme Change | What to Edit | Lines | Complexity |
+|-------------|-------------|-------|------------|
+| Sand/desert palette | `GroundPaletteData` | 2250 | Easy — swap color bytes |
+| Sunset sky for later worlds | `DaySnowPaletteData` or new palette | 2286 | Easy |
+| Oasis underground | `UndergroundPaletteData` | 2262 | Easy |
+| Najdi castle colors | `CastlePaletteData` | 2274 | Easy |
+| "MARIO" → "SAUDI" in HUD | `TopStatusBarLine` | 1637 | Easy — re-encode text |
+| "LUIGI" → "KHALID" etc. | `LuigiName` | 1679 | Easy |
+| Story messages (princess → ??) | Lines 2306–2362 | 2306 | Easy — re-encode, update length bytes |
+| "TIME 2030" easter egg | `TopStatusBarLine` | 1637 | Fun |
+| Arabic ؟ on mystery block | Metatile table | 2118 | Medium — need CHR tile too |
+| Level layouts (desert feel) | Level data | 4457 | Hard — compressed format |
+| Arabic music scales | Music data + freq table | 14994, 16301 | Hard |
+
+### CHR-ROM changes (chr-rom/chr.bin, tile editor)
+
+| Theme Change | CHR-ROM Region | Tile Slots |
+|-------------|---------------|------------|
+| Saudi Mario (small) | Pattern Table 1 | $00–$1F |
+| Saudi Mario (big) | Pattern Table 1 | $20–$5F |
+| Date Goomba | Pattern Table 1 | $60–$6F |
+| Camel Troopa | Pattern Table 1 | $70–$7F |
+| Scorpion (Buzzy Beetle) | Pattern Table 1 | same slot as beetle |
+| Falcon (Cheep-Cheep) | Pattern Table 1 | same slot as cheep |
+| Sand Snake (Blooper) | Pattern Table 1 | $80–$8F |
+| Sheikh Boss (Bowser) | Pattern Table 1 | $C0–$DF |
+| Qahwa cup (mushroom) | Pattern Table 1 | $A0–$A7 |
+| Oud bottle (fire flower) | Pattern Table 1 | $A8–$AF |
+| Dinar coin | Pattern Table 0 | coin tile slot |
+| Sand bricks | Pattern Table 0 | $10–$1F |
+| Oil pipes | Pattern Table 0 | pipe tile slots |
+| Palm trees | Pattern Table 0 | $50–$5F |
+| Sand dunes | Pattern Table 0 | hill tile slots |
+| Najdi castle | Pattern Table 0 | $80–$BF |
+| ؟ block | Pattern Table 0 | ? block tile |
+| Title screen "SAUDI MARIO BROS" | Pattern Table 0 | $C0–$FF + $1EC0 nametable |
+| Saudi flag (flagpole) | Pattern Table 1 | $E0–$E7 |
+
+---
+
+## Theming Reference Details
+
+### Palettes (lines 2238–2304)
+
+Format: 3-byte PPU address header + groups of 4 NES color indices.
 
 | Label | Line | Area |
 |-------|------|------|
@@ -166,7 +362,7 @@ $01=dk blue  $02=dk blue2   $12=blue        $22=sky blue
 $38=cream    $36=peach      $37=tan
 ```
 
-### 2. Text — messages (lines 1636–1692, 2306–2362)
+### Text (lines 1636–1692, 2306–2362)
 
 Custom character encoding (NOT ASCII):
 ```
@@ -195,57 +391,7 @@ $24=space  $28=-  $29=x(multiply)  $2b=!  $af=.
 
 **CRITICAL**: Messages start with 3-byte VRAM header: `high_addr, low_addr, length`. The length byte MUST match the data that follows. Change text length → update this byte.
 
-### 3. CHR-ROM — pixel art (external binary)
-
-Edit `chr-rom/chr.bin` with YY-CHR or NES Screen Tool.
-
-**Pattern Table 1 — sprites ($1000–$1FFF):**
-
-| Tiles | Content |
-|-------|---------|
-| $00–$1F | Mario (small) — walk, jump, swim |
-| $20–$3F | Mario (big) — upper body |
-| $40–$5F | Mario (big) — lower body |
-| $60–$7F | Goomba, Koopa, Buzzy Beetle |
-| $80–$9F | Hammer Bro, Lakitu, Spiny, Blooper |
-| $A0–$BF | Mushroom, fire flower, star, fireball |
-| $C0–$DF | Bowser, Cheep Cheep, Bullet Bill |
-| $E0–$FF | Flagpole, fireworks, misc |
-
-**Pattern Table 0 — backgrounds ($0000–$0FFF):**
-
-| Tiles | Content |
-|-------|---------|
-| $00–$0F | Font (numbers, letters, punctuation) |
-| $10–$4F | Bricks, blocks, ground, pipes |
-| $50–$7F | Clouds, bushes, mountains, trees, fences |
-| $80–$BF | Castle, underwater, misc |
-| $C0–$FF | Title screen elements |
-
-### 4. Level Data (lines 4457–5280)
-
-Compressed format: 2-byte area header + object commands. 32 areas total:
-- `L_GroundArea1`–`22` — overworld
-- `L_UndergroundArea1`–`3` — underground
-- `L_WaterArea1`–`3` — swimming
-- `L_CastleArea1`–`6` — castles
-- Cloud areas and warp zones
-
-### 5. Music (lines 14994–16346)
-
-| Label | Track |
-|-------|-------|
-| `GroundM_P1Data`–`P4CData` | Overworld (4-part) |
-| `CastleMusData` | Castle |
-| `UndergroundMusData` | Underground |
-| `WaterMusData` | Water |
-| `Star_CloudMData` | Star power |
-| `VictoryMusData` | Level complete |
-| `GameOverMusData` | Game over |
-| `DeathMusHdr` | Death jingle |
-| `FreqRegLookupTbl` (line 16301) | Note frequency table |
-
-### 6. Enemy IDs
+### Enemy IDs
 
 ```
 $00=Green Koopa  $01=Red Koopa     $02=Buzzy Beetle  $03=Red Koopa(fly)
