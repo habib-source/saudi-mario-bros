@@ -1424,11 +1424,11 @@ BGColorCtrl_Addr:
       .db $00, $09, $0a, $04
 
 BackgroundColors:
-      .db $22, $22, $0f, $0f ;used by area type if bg color ctrl not set
-      .db $0f, $22, $0f, $0f ;used by background color control if set
+      .db $22, $22, $07, $07 ;used by area type if bg color ctrl not set (dark brown for underground/castle)
+      .db $07, $22, $07, $07 ;used by background color control if set
 
 PlayerColors:
-      .db $22, $16, $27, $18 ;mario's colors
+      .db $22, $0f, $27, $30 ;mario's colors (black iqal, default skin, white thobe)
       .db $22, $30, $27, $19 ;luigi's colors
       .db $22, $37, $27, $16 ;fiery (used by both)
 
@@ -2253,7 +2253,7 @@ GroundPaletteData:
   .db $0f, $38, $17, $07  ;bg palette 1 - bricks/blocks (cream, brown, dark brown)
   .db $0f, $30, $21, $0f  ;bg palette 2 - clouds/sky (unchanged)
   .db $0f, $28, $17, $07  ;bg palette 3 - ground/misc (yellow, brown, dark brown)
-  .db $0f, $16, $27, $18  ;sprite palette 0 - mario
+  .db $0f, $30, $21, $0f  ;sprite palette 0 - mario (white thobe + blue accents)
   .db $0f, $1a, $30, $27  ;sprite palette 1
   .db $0f, $16, $30, $27  ;sprite palette 2
   .db $0f, $0f, $36, $17  ;sprite palette 3

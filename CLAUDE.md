@@ -20,6 +20,10 @@ docker run --rm -v "C:\Users\a\Desktop\dev\saudi-mario-bros:/build" smb-build
 
 # 3. Play
 ./fceux/fceux64.exe output/saudi-mario-bros.nes
+
+# Screenshots are saved to fceux/snaps/.
+# ALWAYS delete all files in fceux/snaps/ before viewing, so you only see current screenshots.
+# It's a temp folder — safe to delete from freely.
 ```
 
 ---
