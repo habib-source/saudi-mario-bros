@@ -2249,14 +2249,14 @@ WaterPaletteData:
 
 GroundPaletteData:
   .db $3f, $00, $20
-  .db $0f, $29, $1a, $0f
-  .db $0f, $36, $17, $0f
-  .db $0f, $30, $21, $0f
-  .db $0f, $27, $17, $0f
-  .db $0f, $16, $27, $18
-  .db $0f, $1a, $30, $27
-  .db $0f, $16, $30, $27
-  .db $0f, $0f, $36, $17
+  .db $0f, $00, $0f, $30  ;bg palette 0 - pipes/vegetation (oil pipe: black body, gray highlight, white contour)
+  .db $0f, $36, $17, $0f  ;bg palette 1 - bricks/blocks
+  .db $0f, $30, $21, $0f  ;bg palette 2 - clouds/sky elements
+  .db $0f, $27, $17, $0f  ;bg palette 3 - ground/misc
+  .db $0f, $16, $27, $18  ;sprite palette 0 - mario
+  .db $0f, $1a, $30, $27  ;sprite palette 1
+  .db $0f, $16, $30, $27  ;sprite palette 2
+  .db $0f, $0f, $36, $17  ;sprite palette 3
   .db $00
 
 UndergroundPaletteData:

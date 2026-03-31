@@ -1,5 +1,7 @@
 output/
 *.nes
-*.bin
-chr-rom/
+original-rom.nes
 fceux/
+smb_asm6f.asm
+smb_prg.bin
+saudi-mario-bros.nes

@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim AS builder
+FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc libc6-dev make git ca-certificates python3 \
@@ -11,12 +11,7 @@ RUN git clone https://github.com/freem/asm6f.git /opt/asm6f \
     && cp asm6f /usr/local/bin/
 
 WORKDIR /build
-COPY SMBDIS.ASM .
-COPY build.sh .
-COPY build_rom.py .
-RUN chmod +x build.sh
 
-# If CHR ROM exists, copy it in
-COPY chr-ro[m] chr-rom/
-
+# Source files are mounted at runtime via -v, not baked in.
+# Mount the project root to /build and output lands in /build/output.
 CMD ["./build.sh"]

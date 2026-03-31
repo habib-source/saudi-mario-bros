@@ -11,12 +11,12 @@ Inspired by the 8-bit Saudi Mario graffiti at Roshn Front / Riyadh Front (by @as
 ## Quick Start
 
 ```bash
-# 1. One-time: extract graphics from original ROM
-python extract_chr.py original-rom.nes
+# 1. One-time setup
+python extract_chr.py original-rom.nes       # extract CHR graphics
+docker build -t smb-build .                   # build toolchain image (once)
 
-# 2. Build
-docker build -t smb-build .
-docker run --rm -v "C:\Users\a\Desktop\dev\saudi-mario-bros\output:/output" smb-build
+# 2. Build (after any edit — no docker build needed)
+docker run --rm -v "C:\Users\a\Desktop\dev\saudi-mario-bros:/build" smb-build
 
 # 3. Play
 ./fceux/fceux64.exe output/saudi-mario-bros.nes
@@ -236,9 +236,11 @@ Original targets **x816** (65816 assembler). We use **asm6f** in Docker. `build.
 
 ### Build commands
 ```bash
-# Full rebuild
+# One-time: build the toolchain image
 docker build -t smb-build .
-docker run --rm -v "C:\Users\a\Desktop\dev\saudi-mario-bros\output:/output" smb-build
+
+# After any code edit — just run (source is volume-mounted, not baked in):
+docker run --rm -v "C:\Users\a\Desktop\dev\saudi-mario-bros:/build" smb-build
 
 # Test
 ./fceux/fceux64.exe output/saudi-mario-bros.nes

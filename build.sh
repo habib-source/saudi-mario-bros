@@ -23,8 +23,8 @@ python3 build_rom.py
 
 # Step 4: Copy to output
 echo "[4/4] Copying to output..."
-mkdir -p /output
-cp saudi-mario-bros.nes /output/
+mkdir -p output
+cp saudi-mario-bros.nes output/
 echo ""
-echo "=== Build complete: /output/saudi-mario-bros.nes ==="
+echo "=== Build complete: output/saudi-mario-bros.nes ==="
 echo "    Open in any NES emulator to play."
