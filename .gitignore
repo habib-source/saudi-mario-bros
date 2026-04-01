@@ -5,3 +5,6 @@ fceux/
 smb_asm6f.asm
 smb_prg.bin
 saudi-mario-bros.nes
+__pycache__/
+tools/
+dump_tiles.py
