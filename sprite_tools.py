@@ -243,22 +243,25 @@ def cmd_import():
         content = f.read()
 
     # Parse frames from the file
+    import re
+    header_re = re.compile(r'^=== (\w+) \((\d+)px\)(.*) ===$')
     frames_data = {}
     priority_frames = set()  # frames marked [x] take precedence
     current_name = None
     current_lines = []
     for line in content.split("\n"):
-        if line.startswith("=== ") and line.endswith(" ==="):
+        m = header_re.match(line)
+        if m:
             if current_name and current_lines:
                 frames_data[current_name] = current_lines
-            # Parse name and priority marker
-            inner = line.split("===")[1].strip()
-            current_name = inner.split(" (")[0]
-            if "[x]" in inner.lower() or "[X]" in inner:
+            current_name = m.group(1)
+            rest = m.group(3)
+            if "[x]" in rest.lower():
                 priority_frames.add(current_name)
             current_lines = []
         elif current_name and line and not line.startswith("#"):
-            if any(c in line for c in '.#@O'):
+            stripped = line.strip()
+            if len(stripped) == 16 and all(c in '.#@O' for c in stripped):
                 current_lines.append(line)
     if current_name and current_lines:
         frames_data[current_name] = current_lines
@@ -271,6 +274,10 @@ def cmd_import():
                 continue
             is_priority = name in priority_frames
             if do_priority != is_priority:
+                continue
+            expected_rows = len(tiles) // 2 * 8
+            if len(frames_data[name]) != expected_rows:
+                print(f"WARNING: {name} has {len(frames_data[name])} lines, expected {expected_rows} — skipping")
                 continue
             frame = ascii_to_frame(frames_data[name])
             tile_pixels = decompose_frame(frame, tiles, name)
