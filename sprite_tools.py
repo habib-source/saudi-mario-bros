@@ -266,27 +266,27 @@ def cmd_import():
     if current_name and current_lines:
         frames_data[current_name] = current_lines
 
-    # Two passes: first non-priority, then priority (so [x] frames overwrite)
+    # Only import frames marked with [x]
     written_tiles = set()
-    for do_priority in [False, True]:
-        for name, tiles in FRAMES.items():
-            if name not in frames_data:
-                continue
-            is_priority = name in priority_frames
-            if do_priority != is_priority:
-                continue
-            expected_rows = len(tiles) // 2 * 8
-            if len(frames_data[name]) != expected_rows:
-                print(f"WARNING: {name} has {len(frames_data[name])} lines, expected {expected_rows} — skipping")
-                continue
-            frame = ascii_to_frame(frames_data[name])
-            tile_pixels = decompose_frame(frame, tiles, name)
-            for tid, pixels in tile_pixels.items():
-                if tid not in written_tiles or is_priority:
-                    set_tile(data, SPRITE_TABLE, tid, pixels)
-                    written_tiles.add(tid)
+    for name, tiles in FRAMES.items():
+        if name not in frames_data:
+            continue
+        if name not in priority_frames:
+            continue
+        expected_rows = len(tiles) // 2 * 8
+        if len(frames_data[name]) != expected_rows:
+            print(f"WARNING: {name} has {len(frames_data[name])} lines, expected {expected_rows} — skipping")
+            continue
+        frame = ascii_to_frame(frames_data[name])
+        tile_pixels = decompose_frame(frame, tiles, name)
+        for tid, pixels in tile_pixels.items():
+            set_tile(data, SPRITE_TABLE, tid, pixels)
+            written_tiles.add(tid)
 
-    print(f"Priority frames: {sorted(priority_frames) if priority_frames else 'none'}")
+    if not priority_frames:
+        print("No frames marked with [x] — skipping import.")
+        return
+    print(f"Priority frames: {sorted(priority_frames)}")
 
     write_chr(data)
     print(f"Imported {len(written_tiles)} unique tiles from {EXPORT_PATH}")
