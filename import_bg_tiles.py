@@ -39,39 +39,153 @@ if os.path.exists('question_block.txt'):
         print('Imported question_block.txt')
 
 
-# --- Title tilemap (SAUDI) ---
+# --- Title tilemap ---
 if os.path.exists('title_tilemap.txt'):
     with open('title_tilemap.txt') as f:
         content = f.read()
-    if '=== CURRENT TITLE: SAUDI ===' in content:
-        section = content.split('=== CURRENT TITLE: SAUDI ===')[1]
-        if '=== MARIO BROS' in section:
-            section = section.split('=== MARIO BROS')[0]
+    title_match = re.search(r'=== CURRENT TITLE: (\w+) ===', content)
+    if title_match:
+        title_name = title_match.group(1)
+        section = content.split(title_match.group(0))[1]
+        if '=== BROS.' in section:
+            section = section.split('=== BROS.')[0]
 
-        saudi_order = []
+        letter_order = []
         current = None
-        letter_tiles = {}
+        letter_tiles = {}  # letter -> list of rows, each row is list of tile IDs
         for line in section.split('\n'):
-            m = re.match(r'^# ([A-Z]\d?)$', line.strip())
+            m = re.match(r'^# ([A-Z]\d?)\s', line.strip())
             if m:
                 current = m.group(1)
-                saudi_order.append(current)
+                letter_order.append(current)
                 letter_tiles[current] = []
             elif current and '[0x' in line:
-                pairs = re.findall(r'\[0x([0-9A-Fa-f]+)\]', line)
-                if len(pairs) == 2:
-                    letter_tiles[current].append((int(pairs[0], 16), int(pairs[1], 16)))
+                tiles = [int(h, 16) for h in re.findall(r'\[0x([0-9A-Fa-f]+)\]', line)]
+                if tiles:
+                    letter_tiles[current].append(tiles)
 
-        if saudi_order:
-            offsets = [0x1EE7, 0x1EF4, 0x1F01, 0x1F0E]
-            for row in range(4):
+        if letter_order:
+            num_rows = min(len(rows) for rows in letter_tiles.values())
+            mario_rows = []
+            for row in range(num_rows):
                 row_data = []
-                for name in saudi_order:
-                    tl, tr = letter_tiles[name][row]
-                    row_data.extend([tl, tr])
-                for j, val in enumerate(row_data):
-                    chrdata[offsets[row] + j] = val
-            print(f'Imported title_tilemap.txt ({" ".join(saudi_order)})')
+                for name in letter_order:
+                    row_data.extend(letter_tiles[name][row])
+                mario_rows.append(row_data)
+            mario_width = len(mario_rows[0])
+
+            # --- BROS. section ---
+            bros_rows = None
+            bros_match = re.search(r'=== BROS\. ===', content)
+            if bros_match:
+                bros_section = content.split(bros_match.group(0))[1]
+                bros_order = []
+                current = None
+                bros_tiles = {}
+                for line in bros_section.split('\n'):
+                    m = re.match(r'^# (\S+)\s', line.strip())
+                    if m:
+                        current = m.group(1)
+                        bros_order.append(current)
+                        bros_tiles[current] = []
+                    elif current and '[0x' in line:
+                        tiles = [int(h, 16) for h in re.findall(r'\[0x([0-9A-Fa-f]+)\]', line)]
+                        if tiles:
+                            bros_tiles[current].append(tiles)
+                if bros_order:
+                    bros_rows = []
+                    for row in range(num_rows):
+                        row_data = []
+                        for name in bros_order:
+                            row_data.extend(bros_tiles[name][row])
+                        bros_rows.append(row_data)
+
+            # Parse shadow config: left=0x5F right=0x7A gap=0x78 pad=0x95
+            shadow_cfg = {'left': 0x5F, 'right': 0x7A, 'gap': 0x78, 'pad': 0x95}
+            cfg_match = re.search(r'Shadow:\s*(.*)', section)
+            if cfg_match:
+                for k, v in re.findall(r'(\w+)=0x([0-9A-Fa-f]+)', cfg_match.group(1)):
+                    shadow_cfg[k] = int(v, 16)
+
+            # Rows 0-4 are letter rows, row 5 is shadow
+            num_letter_rows = min(num_rows, 5)
+
+            # Assemble full 20-tile rows: MARIO + space + BROS + pad to 20
+            full_rows = []
+            for row in range(num_letter_rows):
+                full = list(mario_rows[row]) + [0x26]  # MARIO + space
+                if bros_rows:
+                    full.extend(bros_rows[row])
+                while len(full) < 20:
+                    full.append(0x26)
+                full = full[:20]
+                full_rows.append(full)
+
+            # Write letter rows to CHR-ROM
+            # Row 2 is split: repeat byte at 0x1F49 (positions 0-5), data at 0x1F4D (positions 6-19)
+            row_offsets = [0x1F1B, 0x1F32, None, 0x1F5E, 0x1F75]
+
+            for row in range(num_letter_rows):
+                tiles = full_rows[row]
+                if row == 2:
+                    repeat_val = tiles[0]
+                    for p in range(1, 6):
+                        if tiles[p] != repeat_val:
+                            print(f'WARNING: Row 2 positions 0-5 must be same tile for repeat encoding, got 0x{tiles[p]:02X} at pos {p}')
+                    chrdata[0x1F49] = repeat_val
+                    for j in range(14):
+                        chrdata[0x1F4D + j] = tiles[6 + j]
+                else:
+                    offset = row_offsets[row]
+                    if offset:
+                        for j, val in enumerate(tiles):
+                            chrdata[offset + j] = val
+
+            # Assemble shadow row (row 5) from letter row 5 tiles
+            if num_rows >= 6:
+                shadow_mid = list(mario_rows[5]) + [shadow_cfg['gap']]
+                if bros_rows:
+                    shadow_mid.extend(bros_rows[5])
+                while len(shadow_mid) < 20:
+                    shadow_mid.append(shadow_cfg['pad'])
+                shadow_mid = shadow_mid[:20]
+                shadow_full = [shadow_cfg['left']] + shadow_mid + [shadow_cfg['right']]
+                for j, val in enumerate(shadow_full[:22]):
+                    chrdata[0x1F8C + j] = val
+
+            bros_info = f' + BROS. ({" ".join(bros_order)})' if bros_rows else ''
+            print(f'Imported title_tilemap.txt MARIO ({" ".join(letter_order)}){bros_info}')
+
+    # --- SUPER section ---
+    super_match = re.search(r'=== SUPER ===', content)
+    if super_match:
+        super_section = content.split(super_match.group(0))[1]
+        if '===' in super_section:
+            super_section = super_section.split('===')[0]
+        super_order = []
+        current = None
+        super_tiles = {}
+        for line in super_section.split('\n'):
+            m = re.match(r'^# ([A-Z])\s', line.strip())
+            if m:
+                current = m.group(1)
+                super_order.append(current)
+                super_tiles[current] = []
+            elif current and '[0x' in line:
+                tiles = [int(h, 16) for h in re.findall(r'\[0x([0-9A-Fa-f]+)\]', line)]
+                if tiles:
+                    super_tiles[current].append(tiles)
+        if super_order:
+            super_offsets = [0x1EE7, 0x1EF4, 0x1F01, 0x1F0E]
+            num_rows = min(len(rows) for rows in super_tiles.values())
+            for row in range(min(num_rows, 4)):
+                row_data = []
+                for name in super_order:
+                    row_data.extend(super_tiles[name][row])
+                for j, val in enumerate(row_data[:10]):
+                    chrdata[super_offsets[row] + j] = val
+            print(f'Imported title_tilemap.txt SUPER ({" ".join(super_order)})')
+
 
 
 with open(CHR_PATH, 'wb') as f:
