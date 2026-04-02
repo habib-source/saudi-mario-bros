@@ -259,7 +259,7 @@ def cmd_import():
             if "[x]" in rest.lower():
                 priority_frames.add(current_name)
             current_lines = []
-        elif current_name and line and not line.startswith("#"):
+        elif current_name and line:
             stripped = line.strip()
             if len(stripped) == 16 and all(c in '.#@O' for c in stripped):
                 current_lines.append(line)
