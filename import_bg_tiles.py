@@ -122,24 +122,14 @@ if os.path.exists('title_tilemap.txt'):
                 full_rows.append(full)
 
             # Write letter rows to CHR-ROM
-            # Row 2 is split: repeat byte at 0x1F49 (positions 0-5), data at 0x1F4D (positions 6-19)
-            row_offsets = [0x1F1B, 0x1F32, None, 0x1F5E, 0x1F75]
+            # All rows are data(20) entries (row 2 was converted from repeat encoding)
+            row_offsets = [0x1F1B, 0x1F32, 0x1F49, 0x1F60, 0x1F77]
 
             for row in range(num_letter_rows):
                 tiles = full_rows[row]
-                if row == 2:
-                    repeat_val = tiles[0]
-                    for p in range(1, 6):
-                        if tiles[p] != repeat_val:
-                            print(f'WARNING: Row 2 positions 0-5 must be same tile for repeat encoding, got 0x{tiles[p]:02X} at pos {p}')
-                    chrdata[0x1F49] = repeat_val
-                    for j in range(14):
-                        chrdata[0x1F4D + j] = tiles[6 + j]
-                else:
-                    offset = row_offsets[row]
-                    if offset:
-                        for j, val in enumerate(tiles):
-                            chrdata[offset + j] = val
+                offset = row_offsets[row]
+                for j, val in enumerate(tiles):
+                    chrdata[offset + j] = val
 
             # Assemble shadow row (row 5) from letter row 5 tiles
             if num_rows >= 6:
@@ -151,7 +141,7 @@ if os.path.exists('title_tilemap.txt'):
                 shadow_mid = shadow_mid[:20]
                 shadow_full = [shadow_cfg['left']] + shadow_mid + [shadow_cfg['right']]
                 for j, val in enumerate(shadow_full[:22]):
-                    chrdata[0x1F8C + j] = val
+                    chrdata[0x1F8E + j] = val
 
             bros_info = f' + BROS. ({" ".join(bros_order)})' if bros_rows else ''
             print(f'Imported title_tilemap.txt MARIO ({" ".join(letter_order)}){bros_info}')

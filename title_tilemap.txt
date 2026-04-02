@@ -319,13 +319,12 @@ All letters width 2, 4 rows tall. Currently reads SAUDI.
 
 === CURRENT TITLE: MARIO ===
 Variable-width letters, 6 rows tall (5 letter + 1 shadow). M=2, A=2, R=2, I=2, O=1.
-Row 2 constraint: positions 0-5 (M + A + R) must be the same tile (repeat encoding).
 Shadow: left=0x5F right=0x7A gap=0x78 pad=0x95
 
 # M (width 2)
 [0xD0][0xD1]
 [0xDB][0x42]
-[0xDB][0xE5]
+[0xE4][0xE5]
 [0xE6][0xE3]
 [0xD4][0xD9]
 [0x97][0x98]
