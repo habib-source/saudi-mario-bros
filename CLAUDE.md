@@ -32,7 +32,10 @@ saudi-mario-bros/
 ├── SMBDIS.ASM          # PRG-ROM source — all game code (16,351 lines, 6502 ASM)
 ├── chr-rom/chr.bin      # CHR-ROM — tile graphics (8 KB, checked into git)
 ├── mario_sprites.txt    # ASCII sprite sheet — edit Mario frames here
-├── sprite_tools.py      # Export/import sprites between chr.bin <-> ASCII
+├── castle_tiles.txt     # ASCII castle/crenellation tiles — edit here
+├── mushroom.txt         # ASCII 16x16 mushroom power-up sprite — edit here
+├── sprite_tools.py      # Export/import Mario sprites between chr.bin <-> ASCII
+├── import_bg_tiles.py   # Import question block, title, castle tiles, mushroom into chr.bin
 ├── bake.sh              # Import sprites + build ROM + launch emulator
 ├── build.sh             # Assembles PRG-ROM (called by bake.sh)
 ├── build_rom.py         # Stitches iNES header + PRG + CHR into .nes
@@ -78,6 +81,16 @@ docker run --rm -v "C:\Users\a\Desktop\dev\saudi-mario-bros:/build" smb-build py
 
 H-flip is applied where the game mirrors tiles (standing pose legs, etc). Shared tiles only need editing in one frame — import writes each tile once (first-come, or `[x]` priority).
 
+### Background Tile Editing
+
+Edit ASCII art files to change background tiles and power-up sprites:
+
+- **`castle_tiles.txt`** — 8 castle tiles ($27, $47, $9B–$9E, $A9, $AA in Pattern Table 1). Includes crenellations, brick walls, entrance arches. File also documents metatile layout and castle formation for reference.
+- **`mushroom.txt`** — 16x16 mushroom power-up sprite (tiles $76–$79 in Pattern Table 0). Single grid, no header per tile.
+- **`question_block.txt`** — ? block tiles ($53–$56 in Pattern Table 1).
+
+Same legend as Mario sprites: `.`=transparent, `#`=color 1, `@`=color 2, `O`=color 3. All imported by `import_bg_tiles.py` (called automatically by `bake.sh`).
+
 ---
 
 ## NES Graphics Architecture
@@ -110,11 +123,15 @@ Background palettes are assigned per 16x16 area via the attribute table. Objects
 - Desert ground palette (sand bricks, tan ground, warm dunes)
 - Mario palette: black + skin + white (thobe look)
 - Dark brown background for underground/castle/transitions
+- Mario sprite edits (thobe + shemagh via mario_sprites.txt)
+- Castle tiles rethemed (Najdi fortress crenellations via castle_tiles.txt)
+- Mushroom power-up sprite (via mushroom.txt)
 - Sprite editing tools (ASCII export/import with flip support)
+- Background tile editing tools (castle, mushroom, question block, title)
 
 ### Not Yet Applied (needs approval)
 - Text changes (HUD, story messages)
-- CHR-ROM sprite rethemes (enemies, items, environment)
+- Remaining CHR-ROM sprite rethemes (enemies, items, other environment)
 - Level layout changes
 - Music changes
 - Other palette areas (water, castle, underground)
