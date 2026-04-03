@@ -274,10 +274,12 @@ def cmd_import():
         if name not in priority_frames:
             continue
         expected_rows = len(tiles) // 2 * 8
-        if len(frames_data[name]) != expected_rows:
+        if len(frames_data[name]) < expected_rows:
             print(f"WARNING: {name} has {len(frames_data[name])} lines, expected {expected_rows} — skipping")
             continue
-        frame = ascii_to_frame(frames_data[name])
+        if len(frames_data[name]) > expected_rows:
+            print(f"NOTE: {name} has {len(frames_data[name])} lines, using first {expected_rows}")
+        frame = ascii_to_frame(frames_data[name][:expected_rows])
         tile_pixels = decompose_frame(frame, tiles, name)
         for tid, pixels in tile_pixels.items():
             set_tile(data, SPRITE_TABLE, tid, pixels)

@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Import background tile edits into chr-rom/chr.bin.
+"""Import tile edits into chr-rom/chr.bin.
 
 Imports:
   - question_block.txt -> tiles $53,$54,$55,$56 in Pattern Table 1
   - title_tilemap.txt  -> VRAM buffer at $1EC0 (SAUDI title letter IDs)
+  - castle_tiles.txt   -> tiles $27,$47,$9b-$9e,$a9,$aa in Pattern Table 1
+  - mushroom.txt       -> tiles $76,$77,$78,$79 in Pattern Table 0
 """
 import re, os
 
 CHR_PATH = 'chr-rom/chr.bin'
+PT0 = 0
 PT1 = 4096
 CHAR_TO_VAL = {'.': 0, '#': 1, '@': 2, 'O': 3}
 
@@ -15,8 +18,8 @@ with open(CHR_PATH, 'rb') as f:
     chrdata = bytearray(f.read())
 
 
-def write_tile(tile_idx, pixels):
-    offset = PT1 + tile_idx * 16
+def write_tile(tile_idx, pixels, table=PT1):
+    offset = table + tile_idx * 16
     for y in range(8):
         p0 = p1 = 0
         for x in range(8):
@@ -176,6 +179,45 @@ if os.path.exists('title_tilemap.txt'):
                     chrdata[super_offsets[row] + j] = val
             print(f'Imported title_tilemap.txt SUPER ({" ".join(super_order)})')
 
+
+# --- Castle tiles ---
+if os.path.exists('castle_tiles.txt'):
+    with open('castle_tiles.txt') as f:
+        content = f.read()
+    castle_tile_ids = [0x27, 0x47, 0x9b, 0x9c, 0x9d, 0x9e, 0xa9, 0xaa]
+    imported = []
+    for tid in castle_tile_ids:
+        pattern = rf'--- 0x{tid:02X}\b.*---'
+        m = re.search(pattern, content)
+        if not m:
+            continue
+        after = content[m.end():]
+        rows = []
+        for line in after.split('\n'):
+            s = line.strip()
+            if len(s) == 8 and all(c in '.#@O' for c in s):
+                rows.append([CHAR_TO_VAL[c] for c in s])
+            elif s.startswith('---') or (s and not all(c in '.#@O' for c in s)):
+                break
+            if len(rows) == 8:
+                break
+        if len(rows) == 8:
+            write_tile(tid, rows)
+            imported.append(f'${tid:02X}')
+    if imported:
+        print(f'Imported castle_tiles.txt ({", ".join(imported)})')
+
+
+# --- Mushroom ---
+if os.path.exists('mushroom.txt'):
+    with open('mushroom.txt') as f:
+        grid = [l.strip() for l in f if len(l.strip()) == 16 and all(c in '.#@O' for c in l.strip())]
+    if len(grid) == 16:
+        tile_map = {0x76: (0,0), 0x77: (0,8), 0x78: (8,0), 0x79: (8,8)}
+        for tid, (ry, rx) in tile_map.items():
+            pixels = [[CHAR_TO_VAL[grid[ry+y][rx+x]] for x in range(8)] for y in range(8)]
+            write_tile(tid, pixels, PT0)
+        print('Imported mushroom.txt')
 
 
 with open(CHR_PATH, 'wb') as f:

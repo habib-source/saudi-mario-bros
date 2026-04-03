@@ -1,0 +1,137 @@
+=== CASTLE TILES ===
+Edit tiles below, then run bake.sh to import.
+Legend: . = transparent, # = color 1, @ = color 2, O = color 3
+
+Castle palette: $0f=black, $30=white, $10=light gray, $00=dark gray
+  . = transparent (bg color)
+  # = color 1 ($30 white)
+  @ = color 2 ($10 light gray)
+  O = color 3 ($00 dark gray)
+
+--- 0x27 entrance/window fill (solid dark) ---
+OOOOOOOO
+OOOOOOOO
+OOOOOOOO
+OOOOOOOO
+OOOOOOOO
+OOOOOOOO
+OOOOOOOO
+OOOOOOOO
+
+--- 0x47 castle brick wall ---
+@@@@@@@O
+@@@@@@@O
+@@@@@@@O
+OOOOOOOO
+@@@O@@@@
+@@@O@@@@
+@@@O@@@@
+OOOOOOOO
+
+--- 0x9B entrance arch top-left ---
+@@@@@OOO
+@@@OOOOO
+@@OOOOOO
+OOOOOOOO
+@OOOOOOO
+@OOOOOOO
+OOOOOOOO
+OOOOOOOO
+
+--- 0x9C entrance arch top-right ---
+OOO@@@@O
+OOOOO@@O
+OOOOOO@O
+OOOOOOOO
+OOOOOOO@
+OOOOOOO@
+OOOOOOOO
+OOOOOOOO
+
+--- 0x9D crenellation top-left ---
+####....
+@@@#....
+@@@#....
+@@@#....
+@@@#....
+@@@#....
+@@@#....
+OOO#####
+
+--- 0x9E crenellation top-right ---
+...#####
+...#@@@@
+...#@@@@
+...#@@@@
+...#@@@@
+...#@@@@
+...#@@@@
+####OOOO
+
+--- 0xA9 crenellation+brick top-left ---
+####@@@O
+@@@#@@@O
+@@@#@@@O
+@@@#OOOO
+@@@#@@@@
+@@@#@@@@
+@@@#@@@@
+OOO#####
+
+--- 0xAA crenellation+brick top-right ---
+@@@#####
+@@@#@@@@
+@@@#@@@@
+OOO#@@@@
+@@@#@@@@
+@@@#@@@@
+@@@#@@@@
+####OOOO
+
+
+=== CASTLE METATILES (for reference, not editable) ===
+Each metatile is 2x2 tiles (16x16 px). Format: [TL][TR] / [BL][BR]
+
+Metatile 5 "castle top" (crenellation):
+  [0x9D][0x47]
+  [0x9E][0x47]
+
+Metatile 6 "castle window left":
+  [0x47][0x47]
+  [0x27][0x27]
+
+Metatile 7 "castle brick wall":
+  [0x47][0x47]
+  [0x47][0x47]
+
+Metatile 8 "castle window right":
+  [0x27][0x27]
+  [0x47][0x47]
+
+Metatile 9 "castle top w/ brick" (crenellation+brick):
+  [0xA9][0x47]
+  [0xAA][0x47]
+
+Metatile 10 "entrance top":
+  [0x9B][0x27]
+  [0x9C][0x27]
+
+Metatile 11 "entrance bottom":
+  [0x27][0x27]
+  [0x27][0x27]
+
+
+=== CASTLE FORMATION (5 cols x 11 rows of metatiles) ===
+Tall castle = all rows, Small castle = rows 6-10 only.
+
+Row  0: [empty] [brick] [brick] [brick] [empty]
+Row  1: [empty] [top  ] [wall ] [winL ] [empty]
+Row  2: [brick] [topBr] [topBr] [topBr] [brick]
+Row  3: [wall ] [wall ] [entrT] [wall ] [wall ]
+Row  4: [wall ] [wall ] [entrB] [wall ] [wall ]
+Row  5: [topBr] [topBr] [topBr] [topBr] [topBr]
+Row  6: [wall ] [entrT] [wall ] [entrT] [wall ]  <-- small castle starts here
+Row  7: [wall ] [entrB] [wall ] [entrB] [wall ]
+Row  8: [wall ] [wall ] [wall ] [wall ] [wall ]
+Row  9: [entrT] [wall ] [entrT] [wall ] [entrT]
+Row 10: [entrB] [wall ] [entrB] [wall ] [entrB]
