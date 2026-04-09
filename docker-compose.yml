@@ -1,0 +1,6 @@
+services:
+  smb:
+    build:
+      dockerfile: Dockerfile
+    volumes:
+      - ./output:/SMB/output

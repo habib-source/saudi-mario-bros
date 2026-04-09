@@ -8,3 +8,4 @@ saudi-mario-bros.nes
 __pycache__/
 tools/
 dump_tiles.py
+chr-rom

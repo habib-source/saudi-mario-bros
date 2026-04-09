@@ -42,19 +42,8 @@ See [CLAUDE.md](CLAUDE.md) for the complete retheme table with Arabic names.
 ### Prerequisites
 
 - **Docker** — builds the ROM inside a Debian container with the asm6f assembler
-- **Python 3** — for sprite/tile import scripts
-- **Original SMB ROM** — `original-rom.nes` (you supply this, not included)
+- **Docker compose** (optional) — easier then a run command.
 - **FCEUX** (optional) — NES emulator for testing, placed in `fceux/`
-
-### One-Time Setup
-
-```bash
-# Extract CHR graphics from original ROM
-python extract_chr.py original-rom.nes
-
-# Build the Docker toolchain image
-docker build -t smb-build .
-```
 
 ### Build & Run
 
