@@ -4,3 +4,4 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./output:/SMB/output
+    stdin_open: true

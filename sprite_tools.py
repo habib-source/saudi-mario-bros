@@ -6,10 +6,9 @@ Usage:
   python3 sprite_tools.py thobe    - Fill transparent pixels between legs with thobe color
   python3 sprite_tools.py import   - Import mario_sprites.txt back into chr-rom/chr.bin
 """
-import sys, os, copy
+import copy, argparse
+from pathlib import Path
 
-CHR_PATH = "chr-rom/chr.bin"
-EXPORT_PATH = "mario_sprites.txt"
 
 # Color symbols: . = transparent, # = color1, @ = color2, O = color3
 SYM = ['.', '#', '@', 'O']
@@ -17,12 +16,12 @@ SYM_TO_COLOR = {'.': 0, '#': 1, '@': 2, 'O': 3}
 
 SPRITE_TABLE = 0  # SMB uses pattern table 0 for sprites (PPU_CTRL bit3=0, bit4=1)
 
-def read_chr():
-    with open(CHR_PATH, "rb") as f:
+def read_chr(b):
+    with b.open(mode="rb") as f:
         return bytearray(f.read())
 
-def write_chr(data):
-    with open(CHR_PATH, "wb") as f:
+def write_chr(data, b):
+    with b.open(mode="wb") as f:
         f.write(data)
 
 def get_tile(data, table, tile_num):
@@ -212,10 +211,10 @@ def get_shared_frames():
         shared[name] = sorted(others)
     return shared
 
-def cmd_export():
-    data = read_chr()
+def cmd_export(args):
+    data = read_chr(args.b)
     shared = get_shared_frames()
-    with open(EXPORT_PATH, "w") as f:
+    with args.f.open(mode="w") as f:
         f.write("# Mario Sprite Frames - Saudi Mario Bros\n")
         f.write("# Legend: . = transparent  # = color1 (black/iqal)  @ = color2 (skin)  O = color3 (white/thobe)\n")
         f.write("# Edit pixels below, then run: python3 sprite_tools.py import\n")
@@ -235,11 +234,11 @@ def cmd_export():
             for line in ascii_lines:
                 f.write(line + "\n")
             f.write("\n")
-    print(f"Exported {len(FRAMES)} frames to {EXPORT_PATH}")
+    print(f"Exported {len(FRAMES)} frames to {str(args.f)}")
 
-def cmd_import():
-    data = read_chr()
-    with open(EXPORT_PATH, "r") as f:
+def cmd_import(args):
+    data = read_chr(args.b)
+    with args.f.open() as f:
         content = f.read()
 
     # Parse frames from the file
@@ -290,12 +289,12 @@ def cmd_import():
         return
     print(f"Priority frames: {sorted(priority_frames)}")
 
-    write_chr(data)
-    print(f"Imported {len(written_tiles)} unique tiles from {EXPORT_PATH}")
+    write_chr(data, args.b)
+    print(f"Imported {len(written_tiles)} unique tiles from {str(args.f)}")
 
-def cmd_thobe():
+def cmd_thobe(args):
     """Fill transparent pixels between Mario's legs with thobe color (color 3 = white)."""
-    data = read_chr()
+    data = read_chr(args.b)
     THOBE_COLOR = 3  # color 3 = white
 
     leg_tile_pairs = [
@@ -339,21 +338,48 @@ def cmd_thobe():
             modified_tiles.add(left_tid)
             modified_tiles.add(right_tid)
 
-    write_chr(data)
+    write_chr(data, args.b)
     print(f"Thobe applied: modified {len(modified_tiles)} tiles")
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python3 sprite_tools.py [export|import|thobe]")
-        sys.exit(1)
+def isfile(file):
+    path = Path(file)
+    if not path.is_file():
+        raise argparse.ArgumentTypeError(f"'{str(file)}' Does not exist.")
+    return path
 
-    cmd = sys.argv[1]
-    if cmd == "export":
-        cmd_export()
-    elif cmd == "import":
-        cmd_import()
-    elif cmd == "thobe":
-        cmd_thobe()
-    else:
-        print(f"Unknown command: {cmd}")
-        sys.exit(1)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+         prog='sprit',
+         description='Sprite tools for Saudi Mario Bros CHR-ROM editing.',
+    )
+    actionParser = parser.add_subparsers(
+         required=True,
+         title='SubCommand',
+         description='Export, Import or thobe Mario sprite.',
+    )
+
+    pexport= actionParser.add_parser(
+         'export',
+         help='Export all Mario frames as ASCII art to a file from the SBM binary',
+    )
+    pexport.add_argument('-f', type=Path, required=True, help='sprite file path.')
+    pexport.add_argument('-b', type=isfile, required=True , help='Mario binary path.')
+    pexport.set_defaults(func=cmd_export)
+
+    pimport = actionParser.add_parser(
+         'import',
+         help='Import mario sprite file back into the binary',
+    )
+    pimport.add_argument('-f', type=isfile, required=True, help='sprite file path.')
+    pimport.add_argument('-b', type=isfile, required=True , help='Mario binary path.')
+    pimport.set_defaults(func=cmd_import)
+
+    pthobe = actionParser.add_parser(
+         'thobe',
+         help='Fill transparent pixels between legs with thobe color',
+    )
+    pthobe.add_argument('-f', type=isfile, required=True, help='sprite file path.')
+    pthobe.set_defaults(func=cmd_thobe)
+
+    args = parser.parse_args()
+    args.func(args)
