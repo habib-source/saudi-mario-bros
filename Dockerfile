@@ -29,4 +29,4 @@ RUN chmod +x build.sh
 
 # Source files are mounted at runtime via -v, not baked in.
 # Mount the project root to /build and output lands in /build/output.
-CMD python sprite_tools.py import && python import_bg_tiles.py && ./build.sh
+CMD python sprite_tools.py import -f saudi_sprites.txt -b chr-rom/chr.bin && python import_bg_tiles.py && ./build.sh && sleep infinity
