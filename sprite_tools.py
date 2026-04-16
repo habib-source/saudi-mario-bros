@@ -10,55 +10,7 @@ import argparse, re
 from pathlib import Path
 from collections import defaultdict
 
-
-# Color symbols: . = transparent, # = color1, @ = color2, O = color3
-SYM = ['.', '#', '@', 'O']
-
-SPRITE_TABLE = 0  # SMB uses pattern table 0 for sprites (PPU_CTRL bit3=0, bit4=1)
-EMPTY_CODE=0xfc
-# Frames that have right-sprite-flipped on specific rows (from ChkForPlayerAttrib)
-# Format: frame_name -> set of row indices (0-based) where right tile is h-flipped
-# ChkForPlayerAttrib flips row 3 right sprite for: crouch($50), stand($b8), grow-mid($c0,$c8)
-# It flips rows 2+3 right sprite for: killed($0b game engine routine)
-# Additionally, when same tile ID appears for left and right, the right is always flipped.
-
-# All Mario frames with their tile IDs
-FRAMES = {
-    "BIG_WALK1":    [0x00,0x01, 0x02,0x03, 0x04,0x05, 0x06,0x07],
-    "BIG_WALK2":    [0x08,0x09, 0x0a,0x0b, 0x0c,0x0d, 0x0e,0x0f],
-    "BIG_WALK3":    [0x10,0x11, 0x12,0x13, 0x14,0x15, 0x16,0x17],
-    "BIG_SKID":     [0x18,0x19, 0x1a,0x1b, 0x1c,0x1d, 0x1e,0x1f],
-    "BIG_JUMP":     [0x20,0x21, 0x22,0x23, 0x24,0x25, 0x26,0x27],
-    "BIG_SWIM1":    [0x08,0x09, 0x28,0x29, 0x2a,0x2b, 0x2c,0x2d],
-    "BIG_SWIM2":    [0x08,0x09, 0x0a,0x0b, 0x0c,0x30, 0x2c,0x2d],
-    "BIG_SWIM3":    [0x08,0x09, 0x0a,0x0b, 0x2e,0x2f, 0x2c,0x2d],
-    "BIG_CLIMB1":   [0x08,0x09, 0x28,0x29, 0x2a,0x2b, 0x5c,0x5d],
-    "BIG_CLIMB2":   [0x08,0x09, 0x0a,0x0b, 0x0c,0x0d, 0x5e,0x5f],
-    "BIG_CROUCH":   [0xfc,0xfc, 0x08,0x09, 0x58,0x59, 0x5a,0x5a],
-    "BIG_THROW":    [0x08,0x09, 0x28,0x29, 0x2a,0x2b, 0x0e,0x0f],
-    "BIG_STAND":    [0x00,0x01, 0x4c,0x4d, 0x4a,0x4a, 0x4b,0x4b],
-    "SMALL_WALK1":  [0xfc,0xfc, 0xfc,0xfc, 0x32,0x33, 0x34,0x35],
-    "SMALL_WALK2":  [0xfc,0xfc, 0xfc,0xfc, 0x36,0x37, 0x38,0x39],
-    "SMALL_WALK3":  [0xfc,0xfc, 0xfc,0xfc, 0x3a,0x37, 0x3b,0x3c],
-    "SMALL_SKID":   [0xfc,0xfc, 0xfc,0xfc, 0x3d,0x3e, 0x3f,0x40],
-    "SMALL_JUMP":   [0xfc,0xfc, 0xfc,0xfc, 0x32,0x41, 0x42,0x43],
-    "SMALL_SWIM1":  [0xfc,0xfc, 0xfc,0xfc, 0x32,0x33, 0x44,0x45],
-    "SMALL_SWIM2":  [0xfc,0xfc, 0xfc,0xfc, 0x32,0x33, 0x44,0x47],
-    "SMALL_SWIM3":  [0xfc,0xfc, 0xfc,0xfc, 0x32,0x33, 0x48,0x49],
-    "SMALL_CLIMB1": [0xfc,0xfc, 0xfc,0xfc, 0x32,0x33, 0x90,0x91],
-    "SMALL_CLIMB2": [0xfc,0xfc, 0xfc,0xfc, 0x3a,0x37, 0x92,0x93],
-    "SMALL_DEAD":   [0xfc,0xfc, 0xfc,0xfc, 0x9e,0x9e, 0x9f,0x9f],
-    "SMALL_STAND":  [0xfc,0xfc, 0xfc,0xfc, 0x3a,0x37, 0x4f,0x4f],
-    "GROW_MID":     [0xfc,0xfc, 0x00,0x01, 0x4c,0x4d, 0x4e,0x4e],
-}
-
-HEADER = (
-    "# Mario Sprite Frames - Saudi Mario Bros\n"
-    "# Legend: . = transparent  # = color1 (black/iqal)  @ = color2 (skin)  O = color3 (white/thobe)\n"
-    "# Edit pixels below, then run: python3 sprite_tools.py import\n"
-    "# H-flip is applied where the game mirrors tiles (e.g. symmetric legs in standing pose).\n"
-    "# Palette: color1=$0f(black)  color2=$27(skin)  color3=$30(white)\n\n"
-)
+import config
 
 def read_chr(b):
     with b.open("rb") as f:
@@ -94,7 +46,7 @@ def set_tile(data, tile_num, pixels, size, table):
         data[offset + y] = p0
         data[offset + y + size[1]] = p1
 
-def compose_frame(data, tile_ids, size=[8,8], empty_code=EMPTY_CODE, cols=2, sprite_table=SPRITE_TABLE):
+def compose_frame(data, tile_ids, size=[8,8], empty_code=config.EMPTY_CODE, cols=2, sprite_table=config.SPRITE_TABLE):
     """Compose multiple tiles into a frame, applying h-flip where needed."""
     rows_of_tiles = [tile_ids[i:i+cols] for i in range(0, len(tile_ids), cols)]
     frame = []
@@ -109,7 +61,7 @@ def compose_frame(data, tile_ids, size=[8,8], empty_code=EMPTY_CODE, cols=2, spr
             frame.extend([row_a + row_b for row_a, row_b in zip(tile1, tile2)])
     return frame
 
-def decompose_frame(frame, tile_ids, cols=2, empty_code=EMPTY_CODE):
+def decompose_frame(frame, tile_ids, cols=2, empty_code=config.EMPTY_CODE):
     """Decompose a frame back into individual tile pixel arrays.
     Returns dict {tile_id: pixels}."""
     tiles = {}
@@ -135,30 +87,30 @@ def decompose_frame(frame, tile_ids, cols=2, empty_code=EMPTY_CODE):
                 tiles[tile_row[1]] = pixels2
     return tiles
 
-def frame_to_ascii(frame, ascii_colors=SYM):
+def frame_to_ascii(frame, ascii_colors=config.SYM):
     lines = []
     for row in frame:
         lines.append("".join(ascii_colors[c] for c in row)+"\n")
     return lines
 
-def ascii_to_frame(lines, ascii_colors=SYM):
+def ascii_to_frame(lines, ascii_colors=config.SYM):
     frame = []
     for line in lines:
         row = [ascii_colors.index(c) for c in line.strip()]
         frame.append(row)
     return frame
 
-def get_shared_frames(empty_code=EMPTY_CODE):
+def get_shared_frames(empty_code=config.EMPTY_CODE):
     """Build map: for each frame, which other frames share tiles with it."""
     tile_to_frames = defaultdict(set)
 
-    for name, tiles in FRAMES.items():
+    for name, tiles in config.FRAMES.items():
         for tid in tiles:
             if tid != empty_code: # Skip empty/transparent tiles
                 tile_to_frames[tid].add(name)
 
     shared = {}
-    for name, tiles in FRAMES.items():
+    for name, tiles in config.FRAMES.items():
         others = set()
         for tid in tiles:
             if tid != empty_code:
@@ -170,7 +122,7 @@ def get_shared_frames(empty_code=EMPTY_CODE):
 
     return shared
 
-def cmd_export(args, frames=FRAMES, header=HEADER, tile_size=[8,8], empty_code=EMPTY_CODE):
+def cmd_export(args, frames=config.FRAMES, header=config.HEADER, tile_size=[8,8], empty_code=config.EMPTY_CODE):
     data = read_chr(args.b)
     shared = get_shared_frames()
     output_lines = [header]
@@ -187,7 +139,7 @@ def cmd_export(args, frames=FRAMES, header=HEADER, tile_size=[8,8], empty_code=E
         f.write("".join(output_lines))
     print(f"Exported {len(frames)} frames to {str(args.f)}")
 
-def cmd_import(args, frames=FRAMES, frame_size=[16,32], tile_size=[8,8], ascii_colors=SYM, sprite_table=SPRITE_TABLE):
+def cmd_import(args, frames=config.FRAMES, frame_size=[16,32], tile_size=[8,8], ascii_colors=config.SYM, sprite_table=config.SPRITE_TABLE):
     data = read_chr(args.b)
     with args.f.open() as f:
         content = f.read()
