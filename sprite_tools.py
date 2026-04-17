@@ -6,7 +6,8 @@ Usage:
   python3 sprite_tools.py thobe    - Fill transparent pixels between legs with thobe color
   python3 sprite_tools.py import   - Import mario_sprites.txt back into chr-rom/chr.bin
 """
-import argparse, re
+
+import argparse, re, sys
 from pathlib import Path
 from collections import defaultdict
 
@@ -122,6 +123,33 @@ def get_shared_frames(empty_code=config.EMPTY_CODE):
 
     return shared
 
+def cmd_getchr(args, ines_header_size=config.INES_HEADER_SIZE, prg_rom_bank_size=config.PRG_ROM_BANK_SIZE, chr_rom_bank_size=config.CHR_ROM_BANK_SIZE):
+    nas_path = args.f
+    output_path = args.o
+    with nas_path.open("rb") as f:
+        data = f.read()
+
+    # Verify iNES header
+    if data[:4] != b'NES\x1a':
+        print("ERROR: Not a valid iNES ROM file", file=sys.stderr)
+        sys.exit(1)
+
+    prg_banks = data[4]
+    chr_banks = data[5]
+    print(f"ROM: {prg_banks} PRG banks, {chr_banks} CHR banks")
+    prg_rom_size= prg_banks * prg_rom_bank_size
+    chr_rom_size = chr_banks * chr_rom_bank_size
+    chr_offset = ines_header_size + prg_rom_size
+    chr_data = data[chr_offset:chr_offset + chr_rom_size]
+
+    if len(chr_data) < chr_rom_size:
+        print(f"WARNING: CHR data is only {len(chr_data)} bytes", file=sys.stderr)
+
+    with output_path.open("wb") as f:
+        f.write(chr_data)
+
+    print(f"Extracted {len(chr_data)} bytes of CHR-ROM to {output_path}")
+
 def cmd_export(args, frames=config.FRAMES, header=config.HEADER, tile_size=[8,8], empty_code=config.EMPTY_CODE):
     data = read_chr(args.b)
     shared = get_shared_frames()
@@ -223,6 +251,14 @@ def main():
     pimport.add_argument('-b', type=isfile, required=True , help='Mario binary path.')
     pimport.add_argument('-a', action='store_true', help='import all frames. (by deafault import only x marked priority frames)')
     pimport.set_defaults(func=cmd_import)
+
+    pgetchr = actionParser.add_parser(
+         'getchr',
+         help='Extract chr_rom from the nes file',
+    )
+    pgetchr.add_argument('-f', type=isfile, required=True, help='NES file path.')
+    pgetchr.add_argument('-o', type=Path, required=True , help='Output path.')
+    pgetchr.set_defaults(func=cmd_getchr)
 
     args = parser.parse_args()
     args.func(args)

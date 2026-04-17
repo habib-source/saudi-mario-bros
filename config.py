@@ -1,3 +1,7 @@
+INES_HEADER_SIZE = 16 # bytes
+PRG_ROM_BANK_SIZE = 16384 # bytes
+CHR_ROM_BANK_SIZE = 8192 # bytes
+
 # Color symbols: . = transparent, # = color1, @ = color2, O = color3
 SYM = ['.', '#', '@', 'O']
 
