@@ -664,8 +664,8 @@ GameOverModeValue     = 3
 ;-------------------------------------------------------------------------------------
 ;DIRECTIVES
 
-       .index 8
-       .mem 8
+;.index 8  ; removed for asm6f
+;.mem 8    ; removed for asm6f
 
        .org $8000
 
@@ -1429,7 +1429,7 @@ BackgroundColors:
 
 PlayerColors:
       .db $22, $0f, $27, $30 ;mario's colors (black iqal, default skin, white thobe)
-      .db $22, $30, $27, $19 ;luigi's colors
+      .db $22, $30, $27, $0f ;luigi's colors
       .db $22, $37, $27, $16 ;fiery (used by both)
 
 GetBackgroundColor:
@@ -2909,7 +2909,7 @@ PlayerLoseLife:
              sta Sprite0HitDetectFlag
              lda #Silence             ;silence music
              sta EventMusicQueue
-             inc NumberofLives        ;take one life from player
+             dec NumberofLives        ;take one life from player
              bpl StillInGame          ;if player still has lives, branch
              lda #$00
              sta OperMode_Task        ;initialize mode task,

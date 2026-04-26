@@ -2,7 +2,6 @@ output/
 *.nes
 original-rom.nes
 fceux/
-smb_asm6f.asm
 smb_prg.bin
 saudi-mario-bros.nes
 __pycache__/

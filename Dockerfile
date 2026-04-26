@@ -17,10 +17,10 @@ RUN curl -L -o "original-rom.nes" \
 
 COPY . .
 
-RUN python extract_chr.py original-rom.nes
+RUN python sprite_tools.py getchr -f original-rom.nes -o chr.bin
 
 RUN chmod +x build.sh
 
 # Source files are mounted at runtime via -v, not baked in.
 # Mount the project root to /build and output lands in /build/output.
-CMD python sprite_tools.py import -a -f saudi_sprites.txt -b chr-rom/chr.bin && ./build.sh && sleep infinity
+CMD python sprite_tools.py import -a -f saudi_sprites_final.txt -c chr.bin && ./build.sh && sleep infinity

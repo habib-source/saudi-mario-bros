@@ -7,7 +7,7 @@ Usage:
   python3 sprite_tools.py import   - Import mario_sprites.txt back into chr-rom/chr.bin
 """
 
-import argparse, re, sys
+import argparse, re, sys, os
 from pathlib import Path
 from collections import defaultdict
 
@@ -123,6 +123,55 @@ def get_shared_frames(empty_code=config.EMPTY_CODE):
 
     return shared
 
+def make_ines_header(ines_header_size, prg_banks, chr_banks, mapper=0, mirroring=1):
+    """Create a 16-byte iNES header.
+    mirroring: 0=horizontal, 1=vertical
+    """
+    header = bytearray(ines_header_size)
+    header[0:4] = b'NES\x1a'       # Magic number
+    header[4] = prg_banks           # PRG-ROM banks (16 KB each) — SMB uses 2 (=32KB)
+    header[5] = chr_banks           # CHR-ROM banks (8 KB each)
+    header[6] = (mapper << 4) | mirroring  # Flags 6
+    header[7] = mapper & 0xF0              # Flags 7
+    return bytes(header)
+
+def cmd_build(args, ines_header_size=config.INES_HEADER_SIZE, prg_rom_bank_size=config.PRG_ROM_BANK_SIZE, chr_rom_bank_size=config.CHR_ROM_BANK_SIZE):
+
+    prg_banks=2
+    prg_rom_size= prg_banks * prg_rom_bank_size
+    chr_banks=1
+    chr_rom_size = chr_banks * chr_rom_bank_size
+
+    # Read assembled PRG-ROM
+    with args.p.open("rb") as f:
+        prg_data = f.read()
+    print(f"  PRG-ROM: {len(prg_data)} bytes")
+    # Pad or trim PRG
+    if len(prg_data) < prg_rom_size:
+        print(f"  Padding PRG-ROM from {len(prg_data)} to {prg_rom_size} bytes")
+        prg_data = prg_data + b'\xff' * (prg_rom_size - len(prg_data))
+    elif len(prg_data) > prg_rom_size:
+        print(f"  WARNING: PRG-ROM is {len(prg_data)} bytes, expected {prg_rom_size}", file=sys.stderr)
+        prg_data = prg_data[:prg_rom_size]
+
+    # Look for CHR-ROM data
+    with args.c.open("rb") as f:
+        chr_data = f.read()
+    print(f"  CHR-ROM: {len(chr_data)} bytes (from {args.c})")
+    # Pad or trim CHR
+    if len(chr_data) < chr_rom_size:
+        chr_data = chr_data + b'\x00' * (chr_rom_size - len(chr_data))
+    elif len(chr_data) > chr_rom_size:
+        chr_data = chr_data[:chr_rom_size]
+
+    header = make_ines_header(ines_header_size, prg_banks, chr_banks, mapper=0, mirroring=1)
+
+    with open(args.o, "wb") as f:
+        f.write(b"".join([header, prg_data, chr_data]))
+
+    total = len(header) + len(prg_data) + len(chr_data)
+    print(f"  Output: {args.o} ({total} bytes)")
+
 def cmd_getchr(args, ines_header_size=config.INES_HEADER_SIZE, prg_rom_bank_size=config.PRG_ROM_BANK_SIZE, chr_rom_bank_size=config.CHR_ROM_BANK_SIZE):
     nas_path = args.f
     output_path = args.o
@@ -151,7 +200,7 @@ def cmd_getchr(args, ines_header_size=config.INES_HEADER_SIZE, prg_rom_bank_size
     print(f"Extracted {len(chr_data)} bytes of CHR-ROM to {output_path}")
 
 def cmd_export(args, frames=config.FRAMES, header=config.HEADER, tile_size=[8,8], empty_code=config.EMPTY_CODE):
-    data = read_chr(args.b)
+    data = read_chr(args.c)
     shared = get_shared_frames()
     output_lines = [header]
     for name, tiles in frames.items():
@@ -168,7 +217,7 @@ def cmd_export(args, frames=config.FRAMES, header=config.HEADER, tile_size=[8,8]
     print(f"Exported {len(frames)} frames to {str(args.f)}")
 
 def cmd_import(args, frames=config.FRAMES, frame_size=[16,32], tile_size=[8,8], ascii_colors=config.SYM, sprite_table=config.SPRITE_TABLE):
-    data = read_chr(args.b)
+    data = read_chr(args.c)
     with args.f.open() as f:
         content = f.read()
 
@@ -214,7 +263,7 @@ def cmd_import(args, frames=config.FRAMES, frame_size=[16,32], tile_size=[8,8], 
             set_tile(data, tid, pixels, tile_size, sprite_table)
             written_tiles.add(tid)
 
-    write_chr(data, args.b)
+    write_chr(data, args.c)
     print(f"Imported {len(written_tiles)} unique tiles from {str(args.f)}")
 
 
@@ -240,7 +289,7 @@ def main():
          help='Export all Mario frames as ASCII art to a file from the SBM binary',
     )
     pexport.add_argument('-f', type=Path, required=True, help='sprite file path.')
-    pexport.add_argument('-b', type=isfile, required=True , help='Mario binary path.')
+    pexport.add_argument('-c', type=isfile, required=True , help='Mario chr_rom path.')
     pexport.set_defaults(func=cmd_export)
 
     pimport = actionParser.add_parser(
@@ -248,7 +297,7 @@ def main():
          help='Import mario sprite frames back into the binary',
     )
     pimport.add_argument('-f', type=isfile, required=True, help='sprite file path.')
-    pimport.add_argument('-b', type=isfile, required=True , help='Mario binary path.')
+    pimport.add_argument('-c', type=isfile, required=True , help='Mario chr_rom path.')
     pimport.add_argument('-a', action='store_true', help='import all frames. (by deafault import only x marked priority frames)')
     pimport.set_defaults(func=cmd_import)
 
@@ -257,8 +306,17 @@ def main():
          help='Extract chr_rom from the nes file',
     )
     pgetchr.add_argument('-f', type=isfile, required=True, help='NES file path.')
-    pgetchr.add_argument('-o', type=Path, required=True , help='Output path.')
+    pgetchr.add_argument('-o', type=Path, required=True , help='Output chr_rom path.')
     pgetchr.set_defaults(func=cmd_getchr)
+
+    pbuild = actionParser.add_parser(
+         'build',
+         help='Build the new nes file.',
+    )
+    pbuild.add_argument('-p', type=isfile, required=True, help='prg_rom path')
+    pbuild.add_argument('-c', type=isfile, required=True, help='chr_rom path')
+    pbuild.add_argument('-o', type=Path, required=True , help='Output NES path.')
+    pbuild.set_defaults(func=cmd_build)
 
     args = parser.parse_args()
     args.func(args)
