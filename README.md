@@ -93,24 +93,22 @@ A single 16x16 grid for the mushroom power-up (4 tiles in Pattern Table 0).
 To regenerate `mario_sprites.txt` from the current `chr.bin`:
 
 ```bash
-docker run --rm -v "$(pwd):/build" smb-build python3 sprite_tools.py export
+docker build -t smb-build .
+docker run --rm -v "$(pwd):/SMB" smb-build python sprite_tools.py export -f mario_sprites.txt -c chr.bin
 ```
 
 ## Project Structure
 
 ```
 saudi-mario-bros/
-├── SMBDIS.ASM            # PRG-ROM source — all game code (6502 ASM)
-├── chr-rom/chr.bin        # CHR-ROM tile graphics (8 KB)
+├── smbdis.asm            # PRG-ROM source — all game code (6502 ASM)
 ├── mario_sprites.txt      # Editable Mario sprite sheet (ASCII art)
 ├── castle_tiles.txt       # Editable castle background tiles
 ├── mushroom.txt           # Editable mushroom power-up sprite
-├── sprite_tools.py        # Mario sprite export/import tool
+├── sprite_tools.py        # NES file editing tool run python_tools.py -h for a doc
 ├── import_bg_tiles.py     # Background tile importer (castle, mushroom, etc.)
 ├── bake.sh                # Full build + launch pipeline
 ├── build.sh               # PRG-ROM assembler wrapper
-├── build_rom.py           # iNES ROM stitcher
-├── extract_chr.py         # One-time CHR extractor from original ROM
 ├── Dockerfile             # Build environment (Debian + asm6f)
 └── output/
     └── saudi-mario-bros.nes

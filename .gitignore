@@ -1,9 +1,7 @@
 output/
-*.nes
-original-rom.nes
+**.nes
 fceux/
-smb_prg.bin
-saudi-mario-bros.nes
+**.bin
 __pycache__/
 tools/
 dump_tiles.py
