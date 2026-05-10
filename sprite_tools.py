@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 """
 Sprite tools for Saudi Mario Bros CHR-ROM editing.
-Usage:
-  python3 sprite_tools.py export   - Export all Mario frames as ASCII art to mario_sprites.txt
-  python3 sprite_tools.py thobe    - Fill transparent pixels between legs with thobe color
-  python3 sprite_tools.py import   - Import mario_sprites.txt back into chr-rom/chr.bin
 """
 
 import argparse, re, sys, os
@@ -122,55 +118,6 @@ def get_shared_frames(empty_code=config.EMPTY_CODE):
         shared[name] = sorted(others)
 
     return shared
-
-def make_ines_header(ines_header_size, prg_banks, chr_banks, mapper=0, mirroring=1):
-    """Create a 16-byte iNES header.
-    mirroring: 0=horizontal, 1=vertical
-    """
-    header = bytearray(ines_header_size)
-    header[0:4] = b'NES\x1a'       # Magic number
-    header[4] = prg_banks           # PRG-ROM banks (16 KB each) — SMB uses 2 (=32KB)
-    header[5] = chr_banks           # CHR-ROM banks (8 KB each)
-    header[6] = (mapper << 4) | mirroring  # Flags 6
-    header[7] = mapper & 0xF0              # Flags 7
-    return bytes(header)
-
-def cmd_build(args, ines_header_size=config.INES_HEADER_SIZE, prg_rom_bank_size=config.PRG_ROM_BANK_SIZE, chr_rom_bank_size=config.CHR_ROM_BANK_SIZE):
-
-    prg_banks=2
-    prg_rom_size= prg_banks * prg_rom_bank_size
-    chr_banks=1
-    chr_rom_size = chr_banks * chr_rom_bank_size
-
-    # Read assembled PRG-ROM
-    with args.p.open("rb") as f:
-        prg_data = f.read()
-    print(f"  PRG-ROM: {len(prg_data)} bytes")
-    # Pad or trim PRG
-    if len(prg_data) < prg_rom_size:
-        print(f"  Padding PRG-ROM from {len(prg_data)} to {prg_rom_size} bytes")
-        prg_data = prg_data + b'\xff' * (prg_rom_size - len(prg_data))
-    elif len(prg_data) > prg_rom_size:
-        print(f"  WARNING: PRG-ROM is {len(prg_data)} bytes, expected {prg_rom_size}", file=sys.stderr)
-        prg_data = prg_data[:prg_rom_size]
-
-    # Look for CHR-ROM data
-    with args.c.open("rb") as f:
-        chr_data = f.read()
-    print(f"  CHR-ROM: {len(chr_data)} bytes (from {args.c})")
-    # Pad or trim CHR
-    if len(chr_data) < chr_rom_size:
-        chr_data = chr_data + b'\x00' * (chr_rom_size - len(chr_data))
-    elif len(chr_data) > chr_rom_size:
-        chr_data = chr_data[:chr_rom_size]
-
-    header = make_ines_header(ines_header_size, prg_banks, chr_banks, mapper=0, mirroring=1)
-
-    with open(args.o, "wb") as f:
-        f.write(b"".join([header, prg_data, chr_data]))
-
-    total = len(header) + len(prg_data) + len(chr_data)
-    print(f"  Output: {args.o} ({total} bytes)")
 
 def cmd_getchr(args, ines_header_size=config.INES_HEADER_SIZE, prg_rom_bank_size=config.PRG_ROM_BANK_SIZE, chr_rom_bank_size=config.CHR_ROM_BANK_SIZE):
     nas_path = args.f
@@ -308,15 +255,6 @@ def main():
     pgetchr.add_argument('-f', type=isfile, required=True, help='NES file path.')
     pgetchr.add_argument('-o', type=Path, required=True , help='Output chr_rom path.')
     pgetchr.set_defaults(func=cmd_getchr)
-
-    pbuild = actionParser.add_parser(
-         'build',
-         help='Build the new nes file.',
-    )
-    pbuild.add_argument('-p', type=isfile, required=True, help='prg_rom path')
-    pbuild.add_argument('-c', type=isfile, required=True, help='chr_rom path')
-    pbuild.add_argument('-o', type=Path, required=True , help='Output NES path.')
-    pbuild.set_defaults(func=cmd_build)
 
     args = parser.parse_args()
     args.func(args)

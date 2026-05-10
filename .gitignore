@@ -1,8 +1,12 @@
 output/
-**.nes
 fceux/
-**.bin
+*.bin
 __pycache__/
 tools/
 dump_tiles.py
 chr-rom
+*.o
+*.nes
+*.dbg
+*.dep
+*.ips

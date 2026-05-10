@@ -128,8 +128,9 @@ Mario's colors are controlled by `PlayerColors` in `SMBDIS.ASM` — currently se
 ## Credits
 
 - **Original disassembly**: [doppelganger](https://gist.github.com/1wErt3r/4048722) — complete 6502 disassembly of Super Mario Bros
+- **CC65 disassembly**: [doppelganger](https://github.com/threecreepio/smb-disassembly) — ca65 compatible 6502 disassembly vertion.
 - **Graffiti inspiration**: [@asadalghareeb](https://twitter.com/asadalghareeb) — 8-bit Saudi Mario at Roshn Front, Riyadh
-- **Assembler**: [asm6f](https://github.com/freem/asm6f) — 6502 assembler
+- **Assembler**: [ca65](https://github.com/cc65/cc65) — 6502 assembler
 - **Emulator**: [FCEUX](https://fceux.com/) — NES emulator used for testing
 
 ## License
